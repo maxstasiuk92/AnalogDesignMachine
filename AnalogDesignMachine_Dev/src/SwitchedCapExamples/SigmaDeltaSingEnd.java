@@ -1,7 +1,7 @@
 package SwitchedCapExamples;
 import SwitchedCapCalculation.*;
 
-public class SigmaDelta2ndOrder {
+public class SigmaDeltaSingEnd {
 	private Stage stage1, stage2;
 	
 	private class Stage{
@@ -79,7 +79,7 @@ public class SigmaDelta2ndOrder {
 		}
 	}
 	
-	public SigmaDelta2ndOrder() {
+	public SigmaDeltaSingEnd() {
 		stage1=new Stage(1.0);
 		stage2=new Stage(1.0);
 		stage1.ResetPhase();
