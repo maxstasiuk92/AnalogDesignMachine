@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import SwitchedCapCalculation.ConstNodePotential;
 import SwitchedCapCalculation.SwitchedCapCircuit;
+import SwitchedCapCalculation.SwitchedCapCircuitCreator;
 import SwitchedCapCalculation.SwitchedCapCircuitStateCreator;
 
 
@@ -19,7 +20,7 @@ public class TestStateCreation {
 		boolean [] redundantVoltDepFlag;
 		ArrayList<Object> voltageDependencyList;
 				
-		TestModels.ShortCircuits model=testModels.getShortCircuits(new SwitchedCapCircuit());
+		TestModels.ShortCircuits model=testModels.getShortCircuits(SwitchedCapCircuitCreator.createSwitchedCapCircuit());
 		circuit=model.getSwitchedCapCircuit();
 		try {
 			Field fieldStateCreator;
@@ -89,7 +90,7 @@ public class TestStateCreation {
 		TestModels testModels=new TestModels();
 		ArrayList<ConstNodePotential> extraConstNode=null;
 		
-		TestModels.FloatingNodes model=testModels.getFloatingNodes(new SwitchedCapCircuit());
+		TestModels.FloatingNodes model=testModels.getFloatingNodes(SwitchedCapCircuitCreator.createSwitchedCapCircuit());
 		circuit=model.getSwitchedCapCircuit();
 		try {
 			fieldStateCreator=circuit.getClass().getDeclaredField("stateCreator");
@@ -139,7 +140,7 @@ public class TestStateCreation {
 		byte [][] capConnMat=null;
 		boolean [] validCapConnMatRow=null;
 		
-		TestModels.ChargeCondInstBetweenCaps model=testModels.getChargeCondInstBetweenCaps(new SwitchedCapCircuit());
+		TestModels.ChargeCondInstBetweenCaps model=testModels.getChargeCondInstBetweenCaps(SwitchedCapCircuitCreator.createSwitchedCapCircuit());
 		circuit=model.getSwitchedCapCircuit();
 		try {
 			fieldStateCreator=circuit.getClass().getDeclaredField("stateCreator");
@@ -201,11 +202,11 @@ public class TestStateCreation {
 	public static boolean testCreateState() {
 		boolean correctResult=true;
 		TestModels models=new TestModels();
-		TestModels.CapToVsrc capToVsrc=models.getCapToVsrc(new SwitchedCapCircuit());
-		TestModels.CapBetweenVsrc capBetweenVsrc=models.getCapBetweenVsrc(new SwitchedCapCircuit());
-		TestModels.CapBetweenVsrcAndFloating capBetweenVsrcAndFloating=models.getCapBetweenVsrcAndFloating(new SwitchedCapCircuit());
-		TestModels.FloatingNodes floatingNodes= models.getFloatingNodes(new SwitchedCapCircuit());
-		TestModels.ChargeCondInstBetweenCaps chargeCondInstBetweenCaps=models.getChargeCondInstBetweenCaps(new SwitchedCapCircuit());
+		TestModels.CapToVsrc capToVsrc=models.getCapToVsrc(SwitchedCapCircuitCreator.createSwitchedCapCircuit());
+		TestModels.CapBetweenVsrc capBetweenVsrc=models.getCapBetweenVsrc(SwitchedCapCircuitCreator.createSwitchedCapCircuit());
+		TestModels.CapBetweenVsrcAndFloating capBetweenVsrcAndFloating=models.getCapBetweenVsrcAndFloating(SwitchedCapCircuitCreator.createSwitchedCapCircuit());
+		TestModels.FloatingNodes floatingNodes= models.getFloatingNodes(SwitchedCapCircuitCreator.createSwitchedCapCircuit());
+		TestModels.ChargeCondInstBetweenCaps chargeCondInstBetweenCaps=models.getChargeCondInstBetweenCaps(SwitchedCapCircuitCreator.createSwitchedCapCircuit());
 		
 		ArrayList<AbstractTestModel> testModelList=new ArrayList<>();
 		testModelList.add(capToVsrc);

@@ -298,6 +298,7 @@ public class SwitchedCapCircuitStateCreator {
 	/*
 	 * methods to create state
 	 */
+	
 	private void fillCapConMatInState(SwitchedCapCircuitState state) {
 		int nodeNum=nodeNameList.size();
 		int capNum=capacitorList.size();
@@ -316,7 +317,7 @@ public class SwitchedCapCircuitStateCreator {
 		int capNum=capacitorList.size();
 		for(int i=0; i<nodeNum; i++) {
 			if(validCapConnMatRow[i]) {
-				state.setEquType(SwitchedCapCircuitState.equationType.chargeTransferEquation, i);
+				state.setChargeTransferEquation(i);
 				state.setEquInstInd(i, i);
 				for(int j=0; j<capNum; j++) {
 					if(capConnMat[i][j]!=0) {
@@ -346,12 +347,13 @@ public class SwitchedCapCircuitStateCreator {
 		for(int i=0; i<volDepNum; i++) {
 			if(!redundantVoltDepFlag[i]) {
 				//search free row in state coeff. mat.
-				while(rowSt<nodeNum && state.getEquType(rowSt)!=SwitchedCapCircuitState.equationType.invalidEquation) rowSt++;
+				while(rowSt<nodeNum && !state.isInvalidEquation(rowSt)) rowSt++;
 				if(rowSt<nodeNum) {
-					state.setEquType(SwitchedCapCircuitState.equationType.voltageDependencyEquation, rowSt);
+					state.setVoltageDependencyEquation(rowSt);
 					state.setEquInstInd(i, rowSt);
-					double [] voltDepEqu=voltageDependencyList.get(i).getCoefficients(nodeNum);
-					state.setCoefficientRow(voltDepEqu, rowSt);
+					VoltageDependency src=voltageDependencyList.get(i);
+					state.setCoefficientRow(src.getCoefficients(nodeNum), rowSt);
+					state.setFreeCoefficient(src.getFreeCoefficient(), rowSt);
 				}
 				else {
 					throw new RuntimeException("row for voltage dependency equation NOT found");
@@ -360,26 +362,36 @@ public class SwitchedCapCircuitStateCreator {
 		}
 	}/*fillCoeffInStateForVoltDep*/
 	
-	private void fillCoeffInStateForConstNode(SwitchedCapCircuitState state, boolean extraConstNodePotential) {
+	private void fillCoeffInStateForConstNode(SwitchedCapCircuitState state) {
 		int nodeNum=nodeNameList.size();
-		List<ConstNodePotential> constNodeList=constNodePotentialList;
-		SwitchedCapCircuitState.equationType equTypeVal=SwitchedCapCircuitState.equationType.constPotentialEquation;
-		if(extraConstNodePotential) {
-			equTypeVal=SwitchedCapCircuitState.equationType.fixFloatingNodeEquation;
-			constNodeList=extraConstNodePotentialList;
-		}
-		int constNodeNum=constNodeList.size();
 		int rowSt=0;
-		for(int i=0; i<constNodeNum; i++) {
-			while(rowSt<nodeNum && state.getEquType(rowSt)!=SwitchedCapCircuitState.equationType.invalidEquation) rowSt++;
+		for(int i=0; i<constNodePotentialList.size(); i++) {
+			while(rowSt<nodeNum && !state.isInvalidEquation(rowSt)) rowSt++;
 			if(rowSt<nodeNum) {
-				state.setEquType(equTypeVal, rowSt);
+				state.setConstPotentialEquation(rowSt);
 				state.setEquInstInd(i, rowSt);
-				state.setCoefficient(1.0, rowSt, constNodeList.get(i).getNodeIndex());
-				state.setFreeCoefficient(constNodeList.get(i).getNodePotential(), rowSt);
+				state.setCoefficient(1.0, rowSt, constNodePotentialList.get(i).getNodeIndex());
+				state.setFreeCoefficient(constNodePotentialList.get(i).getNodePotential(), rowSt);
 			}
 			else {
 				throw new RuntimeException("row for const node equation NOT found");
+			}
+		}
+	}
+	
+	private void fillCoeffInStateForExtraConstNode(SwitchedCapCircuitState state) {
+		int nodeNum=nodeNameList.size();
+		int rowSt=0;
+		for(int i=0; i<extraConstNodePotentialList.size(); i++) {
+			while(rowSt<nodeNum && !state.isInvalidEquation(rowSt)) rowSt++;
+			if(rowSt<nodeNum) {
+				state.setFixFloatingNodeEquation(rowSt);
+				state.setEquInstInd(i, rowSt);
+				state.setCoefficient(1.0, rowSt, extraConstNodePotentialList.get(i).getNodeIndex());
+				state.setFreeCoefficient(extraConstNodePotentialList.get(i).getNodePotential(), rowSt);
+			}
+			else {
+				throw new RuntimeException("row for extra const node equation NOT found");
 			}
 		}
 	}
@@ -420,8 +432,8 @@ public class SwitchedCapCircuitStateCreator {
 		fillCapConMatInState(state);
 		fillCoeffInStateForChargeTransf(state);
 		fillCoeffInStateForVoltDep(state);
-		fillCoeffInStateForConstNode(state, false);
-		fillCoeffInStateForConstNode(state, true);
+		fillCoeffInStateForConstNode(state);
+		fillCoeffInStateForExtraConstNode(state);
 		state.setExtraConstNodePotentialList(extraConstNodePotentialList);
 		state.lockState();
 		return state;

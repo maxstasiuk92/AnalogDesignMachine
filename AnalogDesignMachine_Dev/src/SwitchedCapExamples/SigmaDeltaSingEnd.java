@@ -17,7 +17,7 @@ public class SigmaDeltaSingEnd {
 		
 		public Stage(double Vref) {
 			Vsign=0;
-			circuit=new SwitchedCapCircuit();
+			//circuit=new SwitchedCapCircuit();
 			circuit.addConstNodePotential("gnd", 0.0);
 			
 			signal=circuit.addControlledVoltageSource("Vsign", "in", "gnd").setVoltage(0);

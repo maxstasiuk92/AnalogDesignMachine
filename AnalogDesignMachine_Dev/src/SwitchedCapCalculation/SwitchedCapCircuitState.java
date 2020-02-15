@@ -4,11 +4,12 @@ import org.apache.commons.math3.linear.*;
 import java.util.ArrayList;
 
 class SwitchedCapCircuitState {
-	static enum equationType {invalidEquation, chargeTransferEquation, voltageDependencyEquation, constPotentialEquation, fixFloatingNodeEquation};
+	private static enum equationType {invalidEquation, chargeTransferEquation, voltageDependencyEquation, constPotentialEquation, fixFloatingNodeEquation};
 	protected equationType [] equType;
 	protected int [] equInstInd;
 	protected RealMatrix coefficients;
 	private RealMatrix freeCoefficients;
+	/*also may allow to change non-zero capacitance to non-zero capacitance without recreating state*/
 	protected RealMatrix capConnMat;
 	
 	protected ArrayList<ConstNodePotential> extraConstNodePotentialList;
@@ -27,21 +28,40 @@ class SwitchedCapCircuitState {
 		extraConstNodePotentialList=null;
 	}
 	
-	public equationType getEquType(int r) {return equType[r];}
+	public int getEquNumber() {return equType.length;}
 	public int getEquInstInd(int r) {return equInstInd[r];}
 	public double getCoefficient(int r, int c) {return coefficients.getEntry(r, c);}
 	public double getFreeCoefficient(int r) {return freeCoefficients.getEntry(r, 0);}
 	public double getCapConnMatEntry(int r, int c) {return capConnMat.getEntry(r, c);}
+	
+	public boolean isInvalidEquation(int r) {return equType[r]==equationType.invalidEquation;}
+	public boolean isChargeTransferEquation(int r) {return equType[r]==equationType.chargeTransferEquation;}
+	public boolean isVoltageDependencyEquation(int r) {return equType[r]==equationType.voltageDependencyEquation;}
+	public boolean isConstPotentialEquation(int r) {return equType[r]==equationType.constPotentialEquation;}
+	public boolean isFixFloatingNodeEquation(int r) {return equType[r]==equationType.fixFloatingNodeEquation;}
 	
 	private void throwExceptionIfLocked() {
 		if(stateLocked)
 			throw new RuntimeException("state is locked");
 	}
 	
-	public void setEquType(equationType type, int r) {
+	public void setChargeTransferEquation(int r) {
 		throwExceptionIfLocked();
-		equType[r]=type;
+		equType[r]=equationType.chargeTransferEquation;
 	}
+	public void setVoltageDependencyEquation(int r) {
+		throwExceptionIfLocked();
+		equType[r]=equationType.voltageDependencyEquation;
+	}
+	public void setConstPotentialEquation(int r) {
+		throwExceptionIfLocked();
+		equType[r]=equationType.constPotentialEquation;
+	}
+	public void setFixFloatingNodeEquation(int r) {
+		throwExceptionIfLocked();
+		equType[r]=equationType.fixFloatingNodeEquation;
+	}
+	
 	public void setEquInstInd(int indVal, int r) {
 		throwExceptionIfLocked();
 		equInstInd[r]=indVal;
@@ -67,6 +87,7 @@ class SwitchedCapCircuitState {
 		throwExceptionIfLocked();
 		coefficients.addToEntry(r, c, val);
 	}
+	
 	public void setCoefficientRow(double [] val, int r) {
 		throwExceptionIfLocked();
 		coefficients.setRow(r, val);

@@ -3,16 +3,17 @@ package SwitchedCapCalculationTest;
 import java.util.ArrayList;
 
 import SwitchedCapCalculation.SwitchedCapCircuit;
+import SwitchedCapCalculation.SwitchedCapCircuitCreator;
 
 public class TestStateCalculation {
 	
 	public static boolean testCalculate() {
 		boolean correctResult=true;
 		TestModels models=new TestModels();
-		TestModels.CapToVsrc capToVsrc=models.getCapToVsrc(new SwitchedCapCircuit());
-		TestModels.CapBetweenVsrc capBetweenVsrc=models.getCapBetweenVsrc(new SwitchedCapCircuit());
-		TestModels.CapBetweenVsrcAndFloating capBetweenVsrcAndFloating=models.getCapBetweenVsrcAndFloating(new SwitchedCapCircuit());
-		TestModels.SingEndInt singEndInt=models.getSingEndInt(new SwitchedCapCircuit());
+		TestModels.CapToVsrc capToVsrc=models.getCapToVsrc(SwitchedCapCircuitCreator.createSwitchedCapCircuit());
+		TestModels.CapBetweenVsrc capBetweenVsrc=models.getCapBetweenVsrc(SwitchedCapCircuitCreator.createSwitchedCapCircuit());
+		TestModels.CapBetweenVsrcAndFloating capBetweenVsrcAndFloating=models.getCapBetweenVsrcAndFloating(SwitchedCapCircuitCreator.createSwitchedCapCircuit());
+		TestModels.SingEndInt singEndInt=models.getSingEndInt(SwitchedCapCircuitCreator.createSwitchedCapCircuit());
 			
 		ArrayList<AbstractTestModel> testModelList=new ArrayList<>();
 		testModelList.add(capToVsrc);

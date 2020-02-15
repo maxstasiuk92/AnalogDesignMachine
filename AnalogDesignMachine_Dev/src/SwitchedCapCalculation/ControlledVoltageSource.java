@@ -1,7 +1,5 @@
 package SwitchedCapCalculation;
 
-import java.util.Arrays;
-
 public class ControlledVoltageSource extends VoltageDependency {
 	private double voltage;
 	
@@ -23,6 +21,12 @@ public class ControlledVoltageSource extends VoltageDependency {
 	
 	public ControlledVoltageSource setVoltage(double voltage) {
 		this.voltage=voltage;
+		return this;
+	}
+	
+	public ControlledVoltageSource updateVoltageInAllStates(double voltage) {
+		this.voltage=voltage;
+		circuit.updateFreeCoefficientForStates(this);
 		return this;
 	}
 	
