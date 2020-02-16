@@ -1,59 +1,55 @@
-package SwitchedCapCalculation;
+package SwitchedCapComponents;
 
-import java.util.Arrays;
+import SwitchedCapCalculation.SwitchedCapCircuit;
+import SwitchedCapCalculation.SwitchedCapComponent;
+import SwitchedCapCalculation.VoltageDependency;
 
-public class SingleEndedAmplifier extends VoltageDependency {
-	private int positiveInputNodeIndex, negativeInputNodeIndex;
+public class SingleEndedAmplifier implements SwitchedCapComponent {
+	private VoltageDependency amp;
+	String positiveInputNodeName, negativeInputNodeName;
 	private double openLoopGain, inputOffsetVoltage;
 	
-	protected SingleEndedAmplifier(String name, int positiveOutputNodeIndex, int negativeOutputNodeIndex,
-			int positiveInputNodeIndex, int negativeInputNodeIndex, SwitchedCapCircuit circuit)
+	
+	public SingleEndedAmplifier(String name, String positiveOutputNodeName, String negativeOutputNodeName,
+			String positiveInputNodeName, String negativeInputNodeName)
 	{
-		if(null==circuit)
-			throw new RuntimeException("circuit is null");
-		this.name=name;
-		this.circuit=circuit;
-		this.positiveConductiveNodeIndex=positiveOutputNodeIndex;
-		this.negativeConductiveNodeIndex=negativeOutputNodeIndex;
-		this.positiveInputNodeIndex=positiveInputNodeIndex;
-		this.negativeInputNodeIndex=negativeInputNodeIndex;
-		this.openLoopGain=1;
-		this.inputOffsetVoltage=0;
+		if(positiveInputNodeName == null || negativeOutputNodeName==null) {
+			throw new RuntimeException("node names should not be null");
+		}
+		amp=new VoltageDependency(name, positiveOutputNodeName, negativeOutputNodeName, true);
+		//to get positiveInput-negativeInput=positiveOutput-negativeOutput
+		amp.setNodeCoefficient(positiveInputNodeName, -1); 
+		amp.setNodeCoefficient(negativeInputNodeName, 1); 
+		amp.setConductiveState(true);
+		this.positiveInputNodeName=positiveInputNodeName;
+		this.negativeInputNodeName=negativeInputNodeName;
+		openLoopGain=1;
+		inputOffsetVoltage=0;
 	}
 
 	public double getOpenLoopGain() {return openLoopGain;}
 	public double getInputOffsetVoltage() {return inputOffsetVoltage;}
 	
 	public SingleEndedAmplifier setOpenLoopGain(double openLoopGain) {
-		if(circuit.isCircuitLocked())
-			throw new RuntimeException("circuit is locked");
-		if(openLoopGain<=0)
-			throw new RuntimeException("openLoop is negative or zero");
+		if(openLoopGain<=0) {
+			throw new RuntimeException("openLoop should be > 0");
+		}
 		this.openLoopGain=openLoopGain;
+		//to get positiveInput-negativeInput+inputOffsetVoltage=positiveOutput-negativeOutput
+		amp.setNodeCoefficient(positiveInputNodeName, -this.openLoopGain);
+		amp.setNodeCoefficient(negativeInputNodeName, this.openLoopGain);
+		amp.setFreeCoefficient(this.openLoopGain*this.inputOffsetVoltage);
 		return this;
 	}
 	
 	public SingleEndedAmplifier setInputOffsetVoltage(double inputOffsetVoltage) {
-		if(circuit.isCircuitLocked())
-			throw new RuntimeException("circuit is locked");
 		this.inputOffsetVoltage=inputOffsetVoltage;
+		//to get positiveInput-negativeInput+inputOffsetVoltage=positiveOutput-negativeOutput
+		amp.setFreeCoefficient(-this.openLoopGain*this.inputOffsetVoltage);
 		return this;
 	}
 
-/*VoltageDependency interface*/
-	protected boolean getConductiveState() {return true;}
-	protected boolean isActiveComponent() {return true;}
-	
-	protected double [] getCoefficients(int cols) {
-		double [] nodeMat=new double[cols];
-		nodeMat[positiveConductiveNodeIndex]=-1;
-		nodeMat[negativeConductiveNodeIndex]=1;
-		nodeMat[positiveInputNodeIndex]=openLoopGain;
-		nodeMat[negativeInputNodeIndex]=-openLoopGain;
-		return nodeMat;
-	}
-	
-	protected double getFreeCoefficient() {
-		return -inputOffsetVoltage*openLoopGain;
+	public void addToCircuit(SwitchedCapCircuit circuit) {
+		amp.addToCircuit(circuit);
 	}
 }

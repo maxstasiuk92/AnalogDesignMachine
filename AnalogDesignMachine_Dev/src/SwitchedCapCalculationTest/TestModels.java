@@ -1,6 +1,10 @@
 package SwitchedCapCalculationTest;
 
 import SwitchedCapCalculation.*;
+import SwitchedCapComponents.ControlledVoltageSource;
+import SwitchedCapComponents.DifferentialAmplifier;
+import SwitchedCapComponents.SingleEndedAmplifier;
+import SwitchedCapComponents.Switch;
 
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -18,6 +22,8 @@ public class TestModels {
 	public FloatingNodes getFloatingNodes(SwitchedCapCircuit circuit) {return new FloatingNodes(circuit, nodePotentialAccuracy);}
 	public ChargeCondInstBetweenCaps getChargeCondInstBetweenCaps(SwitchedCapCircuit circuit) {return new ChargeCondInstBetweenCaps(circuit, nodePotentialAccuracy);}
 	public SingEndInt getSingEndInt(SwitchedCapCircuit circuit) {return new SingEndInt(circuit, nodePotentialAccuracy);}
+	public DiffSwAmp getDiffSwAmp(SwitchedCapCircuit circuit) {return new DiffSwAmp(circuit, nodePotentialAccuracy);}
+	
 	
 	//C1=1 in paralel with V1=[1, 2, 0]
 	public class CapToVsrc extends AbstractTestModel {
@@ -27,9 +33,9 @@ public class TestModels {
 		public CapToVsrc(SwitchedCapCircuit circuit, double nodePotentialAccuracy) {
 			this.nodePotentialAccuracy=nodePotentialAccuracy;
 			this.circuit=circuit;
-			circuit.addConstNodePotential("gnd", 0);
-			circuit.addCapacitor("C1", "net1", "gnd").setCapacitance(1);
-			inst_V1=circuit.addControlledVoltageSource("V1", "net1", "gnd").setVoltage(1);
+			TestUtil.addConstNodePotential("gnd", 0, circuit);
+			TestUtil.addCapacitor("C1", "net1", "gnd", circuit).setCapacitance(1);
+			inst_V1=TestUtil.addControlledVoltageSource("V1", "net1", "gnd", circuit).setVoltage(1);
 			circuit.lockCircuit();
 			
 			nodeProbes=new ArrayList<NodePotentialProbe>(2);
@@ -74,12 +80,12 @@ public class TestModels {
 		public CapBetweenVsrc(SwitchedCapCircuit circuit, double nodePotentialAccuracy) {
 			this.nodePotentialAccuracy=nodePotentialAccuracy;
 			this.circuit=circuit;
-			circuit.addConstNodePotential("gnd", 0);
-			circuit.addCapacitor("C1", "net3", "gnd").setCapacitance(1);
-			circuit.addControlledVoltageSource("V1", "net1", "gnd").setVoltage(1);
-			circuit.addControlledVoltageSource("V2", "net2", "gnd").setVoltage(2);
-			inst_SW1=circuit.addSwitch("SW1", "net1", "net3");
-			inst_SW2=circuit.addSwitch("SW2", "net3", "net2");
+			TestUtil.addConstNodePotential("gnd", 0, circuit);
+			TestUtil.addCapacitor("C1", "net3", "gnd", circuit).setCapacitance(1);
+			TestUtil.addControlledVoltageSource("V1", "net1", "gnd", circuit).setVoltage(1);
+			TestUtil.addControlledVoltageSource("V2", "net2", "gnd", circuit).setVoltage(2);
+			inst_SW1=TestUtil.addSwitch("SW1", "net1", "net3", circuit);
+			inst_SW2=TestUtil.addSwitch("SW2", "net3", "net2", circuit);
 			circuit.lockCircuit();
 			
 			nodeProbes=new ArrayList<NodePotentialProbe>(4);
@@ -210,38 +216,38 @@ public class TestModels {
 			this.circuit=circuit;
 			this.nodePotentialAccuracy=nodePotentialAccuracy;
 			
-			circuit.addConstNodePotential("gnd", 0);
+			TestUtil.addConstNodePotential("gnd", 0, circuit);
 			//V1 shorted by SW1
-			circuit.addControlledVoltageSource("V1", "net1", "gnd").setVoltage(1.0);
-			circuit.addSwitch("SW1", "net1", "gnd").setConductiveState(true);
+			TestUtil.addControlledVoltageSource("V1", "net1", "gnd", circuit).setVoltage(1.0);
+			TestUtil.addSwitch("SW1", "net1", "gnd", circuit).setConductiveState(true);
 			//V2 not shorted by open SW2
-			circuit.addControlledVoltageSource("V2", "net2", "gnd").setVoltage(1.0);
-			circuit.addSwitch("SW2", "net2", "gnd").setConductiveState(false);
+			TestUtil.addControlledVoltageSource("V2", "net2", "gnd", circuit).setVoltage(1.0);
+			TestUtil.addSwitch("SW2", "net2", "gnd", circuit).setConductiveState(false);
 			//SW3.1 shorted with SW3.2
-			circuit.addSwitch("SW3.1", "net3", "gnd").setConductiveState(true);
-			circuit.addSwitch("SW3.2", "net3", "gnd").setConductiveState(true);
+			TestUtil.addSwitch("SW3.1", "net3", "gnd", circuit).setConductiveState(true);
+			TestUtil.addSwitch("SW3.2", "net3", "gnd", circuit).setConductiveState(true);
 			//Serial conn. of V4.1, V4.2, V4.3 with parallel open SW4
-			circuit.addControlledVoltageSource("V4.1", "net4.1", "gnd").setVoltage(1.0);
-			circuit.addControlledVoltageSource("V4.2", "net4.2", "net4.1").setVoltage(1.0);
-			circuit.addControlledVoltageSource("V4.3", "net4.3", "net4.2").setVoltage(1.0);
-			circuit.addSwitch("SW4", "net4.3", "gnd").setConductiveState(false);
+			TestUtil.addControlledVoltageSource("V4.1", "net4.1", "gnd", circuit).setVoltage(1.0);
+			TestUtil.addControlledVoltageSource("V4.2", "net4.2", "net4.1", circuit).setVoltage(1.0);
+			TestUtil.addControlledVoltageSource("V4.3", "net4.3", "net4.2", circuit).setVoltage(1.0);
+			TestUtil.addSwitch("SW4", "net4.3", "gnd", circuit).setConductiveState(false);
 			//Serial conn. of V5.1, V5.2, V5.3 with parallel short SW5
-			circuit.addControlledVoltageSource("V5.1", "net5.1", "gnd").setVoltage(1.0);
-			circuit.addControlledVoltageSource("V5.2", "net5.2", "net5.1").setVoltage(1.0);
-			circuit.addControlledVoltageSource("V5.3", "net5.3", "net5.2").setVoltage(1.0);
-			circuit.addSwitch("SW5", "net5.3", "gnd").setConductiveState(true);
+			TestUtil.addControlledVoltageSource("V5.1", "net5.1", "gnd", circuit).setVoltage(1.0);
+			TestUtil.addControlledVoltageSource("V5.2", "net5.2", "net5.1", circuit).setVoltage(1.0);
+			TestUtil.addControlledVoltageSource("V5.3", "net5.3", "net5.2", circuit).setVoltage(1.0);
+			TestUtil.addSwitch("SW5", "net5.3", "gnd", circuit).setConductiveState(true);
 			//V6 connected to "gnd"
-			circuit.addControlledVoltageSource("V6", "gnd", "gnd").setVoltage(1.0);
+			TestUtil.addControlledVoltageSource("V6", "gnd", "gnd", circuit).setVoltage(1.0);
 			//closed SW7 connected to "gnd"
-			circuit.addSwitch("SW7", "gnd", "gnd").setConductiveState(true);
+			TestUtil.addSwitch("SW7", "gnd", "gnd", circuit).setConductiveState(true);
 			//Serial conn. of V8.1, V8.2, V8.3 C8 with parallel short SW8
-			circuit.addControlledVoltageSource("V8.1", "net8.1", "gnd").setVoltage(1.0);
-			circuit.addControlledVoltageSource("V8.2", "net8.2", "net8.1").setVoltage(1.0);
-			circuit.addControlledVoltageSource("V8.3", "net8.3", "net8.2").setVoltage(1.0);
-			circuit.addCapacitor("C8", "net8.4", "net8.3").setCapacitance(1);
-			circuit.addSwitch("SW8", "net8.4", "gnd").setConductiveState(true);
+			TestUtil.addControlledVoltageSource("V8.1", "net8.1", "gnd", circuit).setVoltage(1.0);
+			TestUtil.addControlledVoltageSource("V8.2", "net8.2", "net8.1", circuit).setVoltage(1.0);
+			TestUtil.addControlledVoltageSource("V8.3", "net8.3", "net8.2", circuit).setVoltage(1.0);
+			TestUtil.addCapacitor("C8", "net8.4", "net8.3", circuit).setCapacitance(1);
+			TestUtil.addSwitch("SW8", "net8.4", "gnd", circuit).setConductiveState(true);
 			//Single ended amp. A9 in "buffer connection"
-			circuit.addSingleEndedAmplifier("A9", "net9", "gnd", "gnd", "net9").setOpenLoopGain(100);
+			TestUtil.addSingleEndedAmplifier("A9", "net9", "gnd", "gnd", "net9", circuit).setOpenLoopGain(100);
 			circuit.lockCircuit();
 		}
 		
@@ -413,30 +419,30 @@ public class TestModels {
 			this.circuit=circuit;
 			this.nodePotentialAccuracy=nodePotentialAccuracy;
 			
-			circuit.addConstNodePotential("gnd", 0.0);
+			TestUtil.addConstNodePotential("gnd", 0.0, circuit);
 			//C1, V1, SW1(closed) conn. to "gnd"
-			circuit.addCapacitor("C1", "net1.1", "gnd").setCapacitance(1.0);
-			circuit.addControlledVoltageSource("V1", "net1.2", "gnd").setVoltage(1.0);
-			circuit.addSwitch("SW1", "net1.3", "gnd").setConductiveState(true);
+			TestUtil.addCapacitor("C1", "net1.1", "gnd", circuit).setCapacitance(1.0);
+			TestUtil.addControlledVoltageSource("V1", "net1.2", "gnd", circuit).setVoltage(1.0);
+			TestUtil.addSwitch("SW1", "net1.3", "gnd", circuit).setConductiveState(true);
 			//C2=0, SW2(open) conn. to "gnd"
-			circuit.addCapacitor("C2", "net2.1", "gnd").setCapacitance(0.0);
-			circuit.addSwitch("SW2", "net2.2", "gnd").setConductiveState(false);
+			TestUtil.addCapacitor("C2", "net2.1", "gnd", circuit).setCapacitance(0.0);
+			TestUtil.addSwitch("SW2", "net2.2", "gnd", circuit).setConductiveState(false);
 			//C3 and V3 are floating
-			circuit.addCapacitor("C3", "net3.2", "net3.1").setCapacitance(1.0);
-			circuit.addControlledVoltageSource("V3", "net3.3", "net3.2").setVoltage(1.0);
+			TestUtil.addCapacitor("C3", "net3.2", "net3.1", circuit).setCapacitance(1.0);
+			TestUtil.addControlledVoltageSource("V3", "net3.3", "net3.2", circuit).setVoltage(1.0);
 			//C4.1, C4.2=0, V4, SW4(open) are floating
-			circuit.addCapacitor("C4.1", "net4.2", "net4.1").setCapacitance(1.0);
-			circuit.addControlledVoltageSource("V4", "net4.3", "net4.2").setVoltage(1.0);
-			circuit.addSwitch("SW4", "net4.4", "net4.3").setConductiveState(false);
-			circuit.addCapacitor("C4.2", "net4.5", "net4.2").setCapacitance(0.0);
+			TestUtil.addCapacitor("C4.1", "net4.2", "net4.1", circuit).setCapacitance(1.0);
+			TestUtil.addControlledVoltageSource("V4", "net4.3", "net4.2", circuit).setVoltage(1.0);
+			TestUtil.addSwitch("SW4", "net4.4", "net4.3", circuit).setConductiveState(false);
+			TestUtil.addCapacitor("C4.2", "net4.5", "net4.2", circuit).setCapacitance(0.0);
 			//C5=0 || V5 conn. to gnd
-			circuit.addCapacitor("C5", "net5", "gnd").setCapacitance(0.0);
-			circuit.addControlledVoltageSource("V5", "net5", "gnd");
+			TestUtil.addCapacitor("C5", "net5", "gnd", circuit).setCapacitance(0.0);
+			TestUtil.addControlledVoltageSource("V5", "net5", "gnd", circuit);
 			//const nodes net6.1 and net6.2 are conn. to net6.3 via caps.
-			circuit.addConstNodePotential("net6.1", 1.0);
-			circuit.addConstNodePotential("net6.2", 2.0);
-			circuit.addCapacitor("C6.1", "net6.3", "net6.1").setCapacitance(1.0);
-			circuit.addCapacitor("C6.2", "net6.3", "net6.2").setCapacitance(1.0);
+			TestUtil.addConstNodePotential("net6.1", 1.0, circuit);
+			TestUtil.addConstNodePotential("net6.2", 2.0, circuit);
+			TestUtil.addCapacitor("C6.1", "net6.3", "net6.1", circuit).setCapacitance(1.0);
+			TestUtil.addCapacitor("C6.2", "net6.3", "net6.2", circuit).setCapacitance(1.0);
 			circuit.lockCircuit();
 		}
 		
@@ -525,23 +531,23 @@ public class TestModels {
 			this.circuit=circuit;
 			this.nodePotentialAccuracy=nodePotentialAccuracy;
 			//sequence of added components is important for conn. mat. check
-			circuit.addConstNodePotential("gnd1", 0);
-			circuit.addConstNodePotential("gnd2", 0);
-			circuit.addCapacitor("C1", "net1", "gnd1").setCapacitance(1);
-			circuit.addCapacitor("C2", "net2", "gnd1").setCapacitance(2);
-			circuit.addCapacitor("C3", "net3", "gnd1").setCapacitance(3);
-			circuit.addCapacitor("C4", "net4", "gnd1").setCapacitance(4);
+			TestUtil.addConstNodePotential("gnd1", 0, circuit);
+			TestUtil.addConstNodePotential("gnd2", 0, circuit);
+			TestUtil.addCapacitor("C1", "net1", "gnd1", circuit).setCapacitance(1);
+			TestUtil.addCapacitor("C2", "net2", "gnd1", circuit).setCapacitance(2);
+			TestUtil.addCapacitor("C3", "net3", "gnd1", circuit).setCapacitance(3);
+			TestUtil.addCapacitor("C4", "net4", "gnd1", circuit).setCapacitance(4);
 			
-			circuit.addControlledVoltageSource("V12", "net1", "net2").setVoltage(1);
-			circuit.addSwitch("SW23", "net2", "net3").setConductiveState(true);
-			circuit.addSingleEndedAmplifier("A34", "net3", "net4", "gnd1", "gnd2");
+			TestUtil.addControlledVoltageSource("V12", "net1", "net2", circuit).setVoltage(1);
+			TestUtil.addSwitch("SW23", "net2", "net3", circuit).setConductiveState(true);
+			TestUtil.addSingleEndedAmplifier("A34", "net3", "net4", "gnd1", "gnd2", circuit);
 			//circuit.AddControlledVoltageSource("A34", "net3", "net4").SetVoltage(1);
 			
-			circuit.addCapacitor("C5", "net5", "gnd2").setCapacitance(5);
-			circuit.addCapacitor("C6", "net6", "gnd2").setCapacitance(6);
+			TestUtil.addCapacitor("C5", "net5", "gnd2", circuit).setCapacitance(5);
+			TestUtil.addCapacitor("C6", "net6", "gnd2", circuit).setCapacitance(6);
 			
-			circuit.addSwitch("SW56", "net5", "net6").setConductiveState(true);
-			circuit.addControlledVoltageSource("V60", "net6", "gnd2").setVoltage(1);
+			TestUtil.addSwitch("SW56", "net5", "net6", circuit).setConductiveState(true);
+			TestUtil.addControlledVoltageSource("V60", "net6", "gnd2", circuit).setVoltage(1);
 			circuit.lockCircuit();
 		}
 		
@@ -583,20 +589,20 @@ public class TestModels {
 			this.circuit=circuit;
 			this.nodePotentialAccuracy=nodePotentialAccuracy;
 			
-			circuit.addConstNodePotential("gnd", 0.0);
+			TestUtil.addConstNodePotential("gnd", 0.0, circuit);
 			
-			circuit.addSingleEndedAmplifier("A1", "out", "gnd", "int", "gnd").setOpenLoopGain(1e6);
-			circuit.addCapacitor("Cint", "out", "int").setCapacitance(1);
-			rstSw=circuit.addSwitch("SWrst", "out", "int");
+			TestUtil.addSingleEndedAmplifier("A1", "out", "gnd", "int", "gnd", circuit).setOpenLoopGain(1e6);
+			TestUtil.addCapacitor("Cint", "out", "int", circuit).setCapacitance(1);
+			rstSw=TestUtil.addSwitch("SWrst", "out", "int", circuit);
 			
-			circuit.addCapacitor("Csmp", "smpE", "smpI").setCapacitance(1);
-			smpSw1=circuit.addSwitch("SWsmpI", "smpI", "gnd");
-			intSw1=circuit.addSwitch("SWintI", "smpI", "int");
+			TestUtil.addCapacitor("Csmp", "smpE", "smpI", circuit).setCapacitance(1);
+			smpSw1=TestUtil.addSwitch("SWsmpI", "smpI", "gnd", circuit);
+			intSw1=TestUtil.addSwitch("SWintI", "smpI", "int", circuit);
 			
-			smpSw2=circuit.addSwitch("SWsmpE", "in", "smpE");
-			intSw2=circuit.addSwitch("SWintE", "smpE", "gnd");
+			smpSw2=TestUtil.addSwitch("SWsmpE", "in", "smpE", circuit);
+			intSw2=TestUtil.addSwitch("SWintE", "smpE", "gnd", circuit);
 			
-			circuit.addControlledVoltageSource("Vin", "in", "gnd").setVoltage(1.0);
+			TestUtil.addControlledVoltageSource("Vin", "in", "gnd", circuit).setVoltage(1.0);
 			circuit.lockCircuit();
 			nodeProbes=new ArrayList<NodePotentialProbe>(1);
 			nodeProbes.add(circuit.getNodePotentialProbe("out"));
@@ -642,6 +648,97 @@ public class TestModels {
 			case 5: //reset in integrate phase
 				rstSw.setConductiveState(true);
 				correctPotentials.replace("out", 0.0);
+				break;
+			default:
+				throw new RuntimeException("undefined state");
+			}
+		}
+	}
+	
+	public class DiffSwAmp extends AbstractTestModel {
+		ControlledVoltageSource s1, s2;
+		Switch rstP, rstN;
+		public final int ST_rst=0, ST_s1_1V=1, ST_s2_m2V=2, ST_clr=3, ST_s_0V=4;
+		
+		public DiffSwAmp(SwitchedCapCircuit circuit, double nodePotentialAccuracy) {
+			this.circuit=circuit;
+			this.nodePotentialAccuracy=nodePotentialAccuracy;
+			ControlledVoltageSource src;
+			DifferentialAmplifier diffAmp;
+			
+			circuit.addComponent(new ConstNodePotential("gnd", 0));
+			//create diff. amp
+			diffAmp=new DifferentialAmplifier("A1", "outP",	"outN", "gnd", "intN", "intP", "cm");
+			diffAmp.setOpenLoopGainDM(1e6).setOpenLoopGainCM(1e5);
+			circuit.addComponent(diffAmp);
+			src=new ControlledVoltageSource("Vacm", "cm", "gnd");
+			src.setVoltage(1.5);
+			circuit.addComponent(src);
+			//create int cap
+			TestUtil.addCapacitor("Cp", "outP", "intP", circuit).setCapacitance(2.0);
+			TestUtil.addCapacitor("Cn", "outN", "intN", circuit).setCapacitance(2.0);
+			rstP=TestUtil.addSwitch("SWrp", "outP", "intP", circuit);
+			rstN=TestUtil.addSwitch("SWrn", "outN", "intN", circuit);
+			rstP.setConductiveState(true);
+			rstN.setConductiveState(true);
+			//create input cap
+			TestUtil.addCapacitor("Cip1", "in1P", "intN", circuit).setCapacitance(1.0);
+			TestUtil.addCapacitor("Cin1", "gnd", "intP", circuit).setCapacitance(1.0);
+			TestUtil.addCapacitor("Cip2", "in2P", "intN", circuit).setCapacitance(1.0);
+			TestUtil.addCapacitor("Cin2", "gnd", "intP", circuit).setCapacitance(1.0);
+			//create input signals
+			s1=TestUtil.addControlledVoltageSource("Vin1", "in1P", "gnd", circuit);
+			s2=TestUtil.addControlledVoltageSource("Vin2", "in2P", "gnd", circuit);
+			circuit.lockCircuit();
+					
+			nodeProbes=new ArrayList<NodePotentialProbe>();
+			nodeProbes.add(circuit.getNodePotentialProbe("outP"));
+			nodeProbes.add(circuit.getNodePotentialProbe("outN"));
+			correctPotentials=new HashMap<String, Double>();
+			correctPotentials.put("outP", 1.5);
+			correctPotentials.put("outN", 1.5);
+		}
+
+		@Override
+		public int getStateNumber() {
+			return 5;
+		}
+
+		@Override
+		public void setState(int state) {
+			//ST_s1_1V=1, ST_s2_m2V=2, =3, =4
+			switch(state) {
+			case ST_rst:
+				rstP.setConductiveState(true);
+				rstN.setConductiveState(true);
+				correctPotentials.replace("outP", 1.5);
+				correctPotentials.replace("outN", 1.5);
+				break;
+			case ST_s1_1V:
+				rstP.setConductiveState(false);
+				rstN.setConductiveState(false);
+				s1.setVoltage(1.0);
+				correctPotentials.replace("outP", 1.5+0.5/2.0);
+				correctPotentials.replace("outN", 1.5-0.5/2.0);
+				break;
+			case ST_s2_m2V:
+				s2.setVoltage(-2.0);
+				correctPotentials.replace("outP", 1.75-1.0/2.0);
+				correctPotentials.replace("outN", 1.25+1.0/2.0);
+				break;
+			case ST_clr:
+				rstP.setConductiveState(true);
+				rstN.setConductiveState(true);
+				correctPotentials.replace("outP", 1.5);
+				correctPotentials.replace("outN", 1.5);
+				break;
+			case ST_s_0V:
+				rstP.setConductiveState(false);
+				rstN.setConductiveState(false);
+				s1.setVoltage(0.0);
+				s2.setVoltage(0.0);
+				correctPotentials.replace("outP", 1.5+(-0.5+1)/2.0);
+				correctPotentials.replace("outN", 1.5+(0.5-1)/2.0);
 				break;
 			default:
 				throw new RuntimeException("undefined state");

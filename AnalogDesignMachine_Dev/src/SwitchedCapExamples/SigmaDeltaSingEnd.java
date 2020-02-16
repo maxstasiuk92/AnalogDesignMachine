@@ -1,5 +1,7 @@
 package SwitchedCapExamples;
 import SwitchedCapCalculation.*;
+import SwitchedCapComponents.ControlledVoltageSource;
+import SwitchedCapComponents.Switch;
 
 public class SigmaDeltaSingEnd {
 	private Stage stage1, stage2;

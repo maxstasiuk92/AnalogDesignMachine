@@ -1,41 +1,17 @@
-package SwitchedCapCalculation;
-import java.util.Arrays;
+package SwitchedCapComponents;
 
-import SwitchedCapCalculation.SwitchedCapCircuit;
+import SwitchedCapCalculation.*;
 
-public class Switch extends VoltageDependency {
-	private boolean conductiveState;
+public class Switch implements SwitchedCapComponent {
+	private VoltageDependency sw;
 	
-	protected Switch(String name, int positiveNodeIndex, int negativeNodeIndex, SwitchedCapCircuit circuit) throws NullPointerException{
-		if(null==name)
-			throw new NullPointerException("name is null");
-		if(null==circuit)
-			throw new NullPointerException("circuit is null");
-		this.name=name;
-		this.circuit=circuit;
-		this.positiveConductiveNodeIndex=positiveNodeIndex;
-		this.negativeConductiveNodeIndex=negativeNodeIndex;
-		this.name=new String(name);
-		this.conductiveState=false;
+	public Switch(String name, String positiveNodeName, String negativeNodeName) {
+		sw=new VoltageDependency(name, positiveNodeName, negativeNodeName, false);
 	}
 	
-	public String getPositiveNodeName() {return circuit.getNodeName(positiveConductiveNodeIndex);}
-	public String getNegativeNodeName() {return circuit.getNodeName(negativeConductiveNodeIndex);}
-	
-	public void setConductiveState(boolean conductiveState) {this.conductiveState=conductiveState;}
+	public void setConductiveState(boolean conductiveState) {sw.setConductiveState(conductiveState);}
 
-/*VoltageDependency interface*/
-	protected boolean getConductiveState() {return conductiveState;}
-	protected boolean isActiveComponent() {return false;}
-	
-	protected double [] getCoefficients(int cols) {
-		double [] nodeMat=new double[cols];
-		nodeMat[positiveConductiveNodeIndex]=1.0;
-		nodeMat[negativeConductiveNodeIndex]=-1.0;
-		return nodeMat;
+	public void addToCircuit(SwitchedCapCircuit circuit) {
+		sw.addToCircuit(circuit);
 	}
-	protected double getFreeCoefficient() {
-		return 0;
-	}
-		
 }

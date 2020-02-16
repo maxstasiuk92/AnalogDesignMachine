@@ -1,47 +1,33 @@
-package SwitchedCapCalculation;
+package SwitchedCapComponents;
 
-public class ControlledVoltageSource extends VoltageDependency {
-	private double voltage;
+import SwitchedCapCalculation.SwitchedCapCircuit;
+import SwitchedCapCalculation.SwitchedCapComponent;
+import SwitchedCapCalculation.VoltageDependency;
+
+public class ControlledVoltageSource implements SwitchedCapComponent {
+	private VoltageDependency src;
 	
-	protected ControlledVoltageSource(String name, int positiveNodeIndex, int negativeNodeIndex, SwitchedCapCircuit circuit) {
-		if(null==name)
-			throw new NullPointerException("name is null");
-		if(null==circuit)
-			throw new NullPointerException("circuit is null");
-		this.name=new String(name);
-		this.positiveConductiveNodeIndex=positiveNodeIndex;
-		this.negativeConductiveNodeIndex=negativeNodeIndex;
-		this.circuit=circuit;
-		this.voltage=0;
+	public ControlledVoltageSource(String name, String positiveNodeName, String negativeNodeName) {
+		src=new VoltageDependency(name, positiveNodeName, negativeNodeName, true);
+		src.setConductiveState(true);
 	}
 	
-	public String getPositiveNodeName() {return circuit.getNodeName(positiveConductiveNodeIndex);}
-	public String getNegativeNodeName() {return circuit.getNodeName(negativeConductiveNodeIndex);}
-	public double getVoltage() {return voltage;}
-	
 	public ControlledVoltageSource setVoltage(double voltage) {
-		this.voltage=voltage;
+		src.setFreeCoefficient(voltage);
 		return this;
 	}
 	
 	public ControlledVoltageSource updateVoltageInAllStates(double voltage) {
-		this.voltage=voltage;
-		circuit.updateFreeCoefficientForStates(this);
+		SwitchedCapCircuit circuit=src.getCircuit();
+		if(circuit==null) {
+			throw new RuntimeException("ControlledVoltageSource "+src.getName()+" is not added to any circuit");
+		}
+		circuit.updateFreeCoefficientForStates(src);
 		return this;
 	}
-	
-/*VoltageDependency interface*/	
-	protected boolean getConductiveState() {return true;}
-	protected boolean isActiveComponent() {return true;}
-	
-	protected double [] getCoefficients(int cols) {
-		double [] nodeMat=new double[cols];
-		nodeMat[positiveConductiveNodeIndex]=1.0;
-		nodeMat[negativeConductiveNodeIndex]=-1.0;
-		return nodeMat;
-	}
-	
-	protected double getFreeCoefficient() {
-		return voltage;
+		
+	/**/
+	public void addToCircuit(SwitchedCapCircuit circuit) {
+		src.addToCircuit(circuit);
 	}
 }

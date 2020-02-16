@@ -57,7 +57,7 @@ public class TestStateCreation {
 			//get names of redundant inst
 			for(int i=0; i<redundantVoltDepFlag.length; i++) {
 				if(redundantVoltDepFlag[i]) {
-					redundInstList.add((String)voltageDependencyList.get(i).getClass().getDeclaredMethod("GetName")
+					redundInstList.add((String)voltageDependencyList.get(i).getClass().getDeclaredMethod("getName")
 					.invoke(voltageDependencyList.get(i)));
 				}
 			}

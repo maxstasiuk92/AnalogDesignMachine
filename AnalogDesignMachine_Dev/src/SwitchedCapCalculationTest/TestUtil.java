@@ -4,8 +4,9 @@ import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import SwitchedCapCalculation.*;
-
-import SwitchedCapCalculation.SwitchedCapCircuit;
+import SwitchedCapComponents.ControlledVoltageSource;
+import SwitchedCapComponents.SingleEndedAmplifier;
+import SwitchedCapComponents.Switch;
 
 public class TestUtil {
 	
@@ -81,5 +82,37 @@ public class TestUtil {
 		catch(Exception e) {
 			System.out.println("Reflection error: static void PrintCapacitorsInCircuit(SwitchedCapCircuit circuit)");
 		}
+	}
+	
+	public static ConstNodePotential addConstNodePotential(String nodeName, double potential, SwitchedCapCircuit circuit) {
+		ConstNodePotential c=new ConstNodePotential(nodeName, potential);
+		circuit.addComponent(c);
+		return c;
+	}
+	
+	public static Capacitor addCapacitor(String name, String posNode, String negNode, SwitchedCapCircuit circuit) {
+		Capacitor c=new Capacitor(name, posNode, negNode);
+		circuit.addComponent(c);
+		return c;
+	}
+	
+	public static ControlledVoltageSource addControlledVoltageSource(String name, 
+			String posNode, String negNode, SwitchedCapCircuit circuit) {
+		ControlledVoltageSource c=new ControlledVoltageSource(name, posNode, negNode);
+		circuit.addComponent(c);
+		return c;
+	}
+	
+	public static Switch addSwitch(String name, String posNode, String negNode, SwitchedCapCircuit circuit) {
+		Switch c=new Switch(name, posNode, negNode);
+		circuit.addComponent(c);
+		return c;
+	}
+	
+	public static SingleEndedAmplifier addSingleEndedAmplifier(String name, String posOutNode, String negOutNode, 
+			String posInNode, String negInNode, SwitchedCapCircuit circuit) {
+		SingleEndedAmplifier c=new SingleEndedAmplifier(name, posOutNode, negOutNode, posInNode, negInNode);
+		circuit.addComponent(c);
+		return c;
 	}
 }

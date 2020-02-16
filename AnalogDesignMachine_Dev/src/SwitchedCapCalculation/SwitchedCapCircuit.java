@@ -8,6 +8,10 @@ import java.util.Collection;
 import java.util.List;
 import org.apache.commons.math3.linear.*;
 
+import SwitchedCapComponents.ControlledVoltageSource;
+import SwitchedCapComponents.SingleEndedAmplifier;
+import SwitchedCapComponents.Switch;
+
 
 public class SwitchedCapCircuit {
 	private boolean circuitLocked; //all parameters are locked, calculations are allowed
@@ -46,8 +50,11 @@ public class SwitchedCapCircuit {
 	}
 
 /*adding objects to circuit*/
-	/*returns index of node in list*/
-	private int addNode(String nodeName) {
+	/**returns index of node in list*/
+	protected int addNode(String nodeName) {
+		if(circuitLocked) {
+			throw new RuntimeException("circuit is locked");
+		}
 		int nodeIndex=nodeNameList.lastIndexOf(nodeName);
 		if(nodeIndex<0) {
 			nodeNameList.add(nodeName);
@@ -57,61 +64,41 @@ public class SwitchedCapCircuit {
 	}
 	
 	/**unique name is not mandatory*/
-	public Capacitor addCapacitor(String name, String positiveNodeName, String negativeNodeName) {
-		if(circuitLocked)
+	protected Capacitor addCapacitor(Capacitor cap) {
+		if(circuitLocked) {
 			throw new RuntimeException("circuit is locked");
-		Capacitor cap=new Capacitor(name, addNode(positiveNodeName), addNode(negativeNodeName), this);
+		}
 		capacitorList.add(cap);
 		return cap;
 	}
 	
-	/**unique name is not mandatory*/
-	public Switch addSwitch(String name, String positiveNodeName, String negativeNodeName) {
-		if(circuitLocked)
+	protected ConstNodePotential addConstNodePotential(ConstNodePotential constNode) {
+		if(circuitLocked) {
 			throw new RuntimeException("circuit is locked");
-		/*if(positiveNodeName==negativeNodeName)
-			throw new RuntimeException("positiveNodeName and negativeNodeName are equal");*/
-		Switch sw=new Switch(name, addNode(positiveNodeName), addNode(negativeNodeName), this);
-		voltageDependencyList.add(sw);
-		return sw;
-	}
-	
-	public ConstNodePotential addConstNodePotential(String nodeName, double potential) {
-		if(circuitLocked)
-			throw new RuntimeException("circuit is locked");
+		}
 		//check, that new const potential
-		int i=0;
-		while(i<constNodePotentialList.size()) {
-			if(constNodePotentialList.get(i).getNodeName().equals(nodeName))
-				throw new RuntimeException("try to redefined const potential for "+nodeName);
-			i++;
+		for(int i=0; i<constNodePotentialList.size(); i++) {
+			if(constNodePotentialList.get(i).getNodeName().equals(constNode.getNodeName())) {
+				throw new RuntimeException("try to redefined const potential for "+constNode.getNodeName());
+			}
 		}
-		ConstNodePotential pot=new ConstNodePotential(addNode(nodeName), potential, this);
-		constNodePotentialList.add(pot);
-		return pot;
+		constNodePotentialList.add(constNode);
+		return constNode;
 	}
 	
 	/**unique name is not mandatory*/
-	public ControlledVoltageSource addControlledVoltageSource(String name, String positiveNodeName, 
-			String negativeNodeName) {
+	protected VoltageDependency addVoltageDependency(VoltageDependency voltageDependency) {
 		if(circuitLocked) {
 			throw new RuntimeException("circuit is locked");
 		}
-		ControlledVoltageSource vsrc=new ControlledVoltageSource(name, addNode(positiveNodeName), addNode(negativeNodeName), this);
-		voltageDependencyList.add(vsrc);
-		return vsrc;
+		voltageDependencyList.add(voltageDependency);
+		return voltageDependency;
 	}
 	
-	/**unique name is not mandatory*/
-	public SingleEndedAmplifier addSingleEndedAmplifier(String name, String positiveOutputNodeName, String negativeOutputNodeName,
-			String positiveInputNodeName, String negativeInputNodeName) {
-		if(circuitLocked) {
-			throw new RuntimeException("circuit is locked");
-		}
-		SingleEndedAmplifier amp=new SingleEndedAmplifier(name, addNode(positiveOutputNodeName), addNode(negativeOutputNodeName),
-				addNode(positiveInputNodeName), addNode(negativeInputNodeName), this);
-		voltageDependencyList.add(amp);
-		return amp;
+	
+	
+	public void addComponent(SwitchedCapComponent component) {
+		component.addToCircuit(this);
 	}
 	
 	public NodePotentialProbe getNodePotentialProbe(String nodeName) {
@@ -153,7 +140,7 @@ public class SwitchedCapCircuit {
 		return new String(nodeNameList.get(nodeIndex));	
 	}
 	
-	protected void updateFreeCoefficientForStates(VoltageDependency src) {
+	public void updateFreeCoefficientForStates(VoltageDependency src) {
 		//search index of instance
 		boolean updated;
 		int instInd=voltageDependencyList.lastIndexOf(src);

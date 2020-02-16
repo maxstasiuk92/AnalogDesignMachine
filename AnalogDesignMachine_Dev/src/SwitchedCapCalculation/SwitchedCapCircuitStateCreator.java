@@ -123,7 +123,7 @@ public class SwitchedCapCircuitStateCreator {
 						activeInLoop |= voltageDependencyList.get(j).isActiveComponent();
 				}
 				if(activeInLoop) {
-					shortInstList.add(voltageDependencyList.get(i).GetName());
+					shortInstList.add(voltageDependencyList.get(i).getName());
 				}
 			}
 		}
