@@ -5,9 +5,10 @@ public class Capacitor {
 	private SwitchedCapCircuit circuit;
 	private String name;
 	private int positiveNodeIndex, negativeNodeIndex;
+	private String positiveNodeName, negativeNodeName;
 	private double capacitance;
 	
-	protected Capacitor(String name, int positiveNodeIndex, int negativeNodeIndex, SwitchedCapCircuit circuit) {
+	protected Capacitor(String name, String positiveNodeName, String negativeNodeName) {
 		if(null==name)
 			throw new NullPointerException("name is null");
 		this.name=new String(name);
