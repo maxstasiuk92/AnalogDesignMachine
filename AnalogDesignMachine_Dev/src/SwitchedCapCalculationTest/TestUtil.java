@@ -10,7 +10,7 @@ import SwitchedCapComponents.Switch;
 
 public class TestUtil {
 	
-	static boolean approxEqual(double valueA, double valueB, double error) {
+	public static boolean approxEqual(double valueA, double valueB, double error) {
 		if(error<0)
 			error=-error;
 		if(valueA+error>valueB && valueA-error<valueB)
@@ -19,20 +19,20 @@ public class TestUtil {
 	}
 	
 	/*print methods*/
-	static void printMatrix(double [][] mat) {
+	public static void printMatrix(double [][] mat) {
 		for(double [] row: mat) {
 			System.out.println(Arrays.toString(row));
 		}
 	}
 	
-	static void printMatrix(byte [][] mat) {
+	public static void printMatrix(byte [][] mat) {
 		for(byte [] row: mat) {
 			System.out.println(Arrays.toString(row));
 		}
 	}
 	
 	@SuppressWarnings("unchecked")
-	static void printNodesInCircuit(SwitchedCapCircuit circuit) {
+	public static void printNodesInCircuit(SwitchedCapCircuit circuit) {
 		ArrayList<String> nodeNameList;
 		try {
 			Field nodeNameListField=circuit.getClass().getDeclaredField("nodeNameList");
@@ -46,7 +46,7 @@ public class TestUtil {
 	}
 	
 	@SuppressWarnings("unchecked")
-	static void printCapacitorsInCircuit(SwitchedCapCircuit circuit) {
+	public static void printCapacitorsInCircuit(SwitchedCapCircuit circuit) {
 		ArrayList<Capacitor> capacitorList;
 		String report=new String();
 		try {
@@ -64,7 +64,7 @@ public class TestUtil {
 	}
 	
 	@SuppressWarnings("unchecked")
-	static void printVoltDependInCircuit(SwitchedCapCircuit circuit) {
+	public static void printVoltDependInCircuit(SwitchedCapCircuit circuit) {
 		ArrayList<Object> voltDepList;
 		
 		String report=new String();

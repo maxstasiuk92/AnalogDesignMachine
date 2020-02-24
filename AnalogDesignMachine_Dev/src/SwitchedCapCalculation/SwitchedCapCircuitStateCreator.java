@@ -413,6 +413,7 @@ public class SwitchedCapCircuitStateCreator {
 			createAuxiliaryMatrices();
 		}
 		//init matrices for voltage dependencies
+		//initMatricesForVoltageDependency
 		initMatForVoltDep();
 		//check short circuits, remove redundant voltage dependencies
 		fillVoltDepAndConstPotLinComb();

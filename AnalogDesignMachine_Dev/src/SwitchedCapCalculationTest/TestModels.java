@@ -23,6 +23,7 @@ public class TestModels {
 	public ChargeCondInstBetweenCaps getChargeCondInstBetweenCaps(SwitchedCapCircuit circuit) {return new ChargeCondInstBetweenCaps(circuit, nodePotentialAccuracy);}
 	public SingEndInt getSingEndInt(SwitchedCapCircuit circuit) {return new SingEndInt(circuit, nodePotentialAccuracy);}
 	public DiffSwAmp getDiffSwAmp(SwitchedCapCircuit circuit) {return new DiffSwAmp(circuit, nodePotentialAccuracy);}
+	public SingEndIntWithStates getSingEndIntWithStates(SwitchedCapCircuit circuit) {return new SingEndIntWithStates(circuit, nodePotentialAccuracy);}
 	
 	
 	//C1=1 in paralel with V1=[1, 2, 0]
@@ -584,7 +585,7 @@ public class TestModels {
 		Switch rstSw;
 		Switch smpSw1, smpSw2;
 		Switch intSw1, intSw2;
-				
+						
 		public SingEndInt(SwitchedCapCircuit circuit, double nodePotentialAccuracy) {
 			this.circuit=circuit;
 			this.nodePotentialAccuracy=nodePotentialAccuracy;
@@ -655,6 +656,61 @@ public class TestModels {
 		}
 	}
 	
+	public class SingEndIntWithStates extends SingEndInt{
+		private String stateName;
+		public SingEndIntWithStates(SwitchedCapCircuit circuit, double nodePotentialAccuracy) {
+			//create circuit
+			super(circuit, nodePotentialAccuracy);
+			//create reset state
+			rstSw.setConductiveState(true);
+			smpSw1.setConductiveState(true);
+			smpSw2.setConductiveState(true);
+			intSw1.setConductiveState(false);
+			intSw2.setConductiveState(false);
+			circuit.saveState("rst");
+			//create sample state
+			rstSw.setConductiveState(false);
+			circuit.saveState("smp");
+			//create integrate state
+			smpSw1.setConductiveState(false);
+			smpSw2.setConductiveState(false);
+			intSw1.setConductiveState(true);
+			intSw2.setConductiveState(true);
+			circuit.saveState("int");
+		}
+		
+		@Override
+		public int getStateNumber() {return 20;}
+		
+		@Override
+		public void setState(int state) {
+			if(state==0) {
+				//reset state
+				stateName="rst";
+				correctPotentials.replace("out", 0.0);
+			} else if((state & 1)==1) {
+				//sample state
+				stateName="smp";
+				//same correctPotentials
+			} else {
+				//integrate state
+				stateName="int";
+				correctPotentials.replace("out", (double)(state>>1));
+			}
+		}
+		
+		@Override
+		public boolean checkCalculation() {
+			boolean correctResult=true;
+			for(int i=0; i<getStateNumber(); i++) {
+				setState(i);
+				circuit.calculateState(stateName);
+				correctResult &= checkState(i);
+			}
+			return correctResult;
+		}
+	}
+	
 	public class DiffSwAmp extends AbstractTestModel {
 		ControlledVoltageSource s1, s2;
 		Switch rstP, rstN;
@@ -706,7 +762,6 @@ public class TestModels {
 
 		@Override
 		public void setState(int state) {
-			//ST_s1_1V=1, ST_s2_m2V=2, =3, =4
 			switch(state) {
 			case ST_rst:
 				rstP.setConductiveState(true);
@@ -745,4 +800,5 @@ public class TestModels {
 			}
 		}
 	}
+
 }

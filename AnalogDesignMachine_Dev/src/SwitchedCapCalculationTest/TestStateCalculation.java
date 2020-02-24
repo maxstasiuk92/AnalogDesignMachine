@@ -14,13 +14,15 @@ public class TestStateCalculation {
 		TestModels.CapBetweenVsrc capBetweenVsrc=models.getCapBetweenVsrc(SwitchedCapCircuitCreator.createSwitchedCapCircuit());
 		TestModels.CapBetweenVsrcAndFloating capBetweenVsrcAndFloating=models.getCapBetweenVsrcAndFloating(SwitchedCapCircuitCreator.createSwitchedCapCircuit());
 		TestModels.SingEndInt singEndInt=models.getSingEndInt(SwitchedCapCircuitCreator.createSwitchedCapCircuit());
+		TestModels.SingEndIntWithStates singEndIntWithSt=models.getSingEndIntWithStates(SwitchedCapCircuitCreator.createSwitchedCapCircuit());
 		TestModels.DiffSwAmp diffSwAmp=models.getDiffSwAmp(SwitchedCapCircuitCreator.createSwitchedCapCircuit());
-			
+					
 		ArrayList<AbstractTestModel> testModelList=new ArrayList<>();
 		testModelList.add(capToVsrc);
 		testModelList.add(capBetweenVsrc);
 		testModelList.add(capBetweenVsrcAndFloating);
 		testModelList.add(singEndInt);
+		testModelList.add(singEndIntWithSt);
 		testModelList.add(diffSwAmp);
 		
 		for(int i=0; i<testModelList.size(); i++) {
