@@ -1,9 +1,6 @@
 package SwitchedCapComponents;
 
 import SwitchedCapCalculation.*;
-import java.util.ArrayList;
-
-import javax.management.RuntimeErrorException;
 
 public class Multiplexor implements SwitchedCapComponent{
 	private String name;
@@ -28,7 +25,7 @@ public class Multiplexor implements SwitchedCapComponent{
 		if(addedToCircuit) {
 			throw new RuntimeException("multiplexor "+name+" is already added to circuit");
 		}
-		if(channel>switchArray.length || channel<0) {
+		if(channel>=switchArray.length || channel<0) {
 			throw new RuntimeException("channel out of range");
 		}
 		if(switchArray[channel]!=null) {

@@ -3,6 +3,10 @@ package SwitchedCapCalculationTest;
 import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+
+import org.apache.commons.math3.linear.RealMatrix;
+
 import SwitchedCapCalculation.*;
 import SwitchedCapComponents.ControlledVoltageSource;
 import SwitchedCapComponents.SingleEndedAmplifier;
@@ -114,5 +118,36 @@ public class TestUtil {
 		SingleEndedAmplifier c=new SingleEndedAmplifier(name, posOutNode, negOutNode, posInNode, negInNode);
 		circuit.addComponent(c);
 		return c;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static void printCoefficientsOfState(SwitchedCapCircuit circuit, String stateName) {
+		HashMap<Object, Object> stateList=null;
+		try {
+			Field field=circuit.getClass().getDeclaredField("stateList");
+			field.setAccessible(true);
+			stateList=(HashMap<Object, Object>)field.get(circuit);
+			Object state=stateList.get(stateName);
+			field=state.getClass().getDeclaredField("coefficients");
+			field.setAccessible(true);
+			RealMatrix coeff=(RealMatrix)field.get(state);
+
+			field=state.getClass().getDeclaredField("freeCoefficients");
+			field.setAccessible(true);
+			RealMatrix freeCoeff=(RealMatrix)field.get(state);
+			
+			for(int i=0; i<coeff.getRowDimension(); i++) {
+				for(int j=0; j<coeff.getColumnDimension(); j++) {
+					System.out.print(coeff.getEntry(i, j)+" ");
+				}
+				System.out.println(" | "+freeCoeff.getEntry(i, 0));
+			}
+		} catch(Exception e) {
+			System.out.println("reflection error");
+			e.printStackTrace();
+		}
+		if(stateList!=null) {
+			
+		}
 	}
 }

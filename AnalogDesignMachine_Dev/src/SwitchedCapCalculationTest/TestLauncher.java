@@ -1,7 +1,9 @@
 package SwitchedCapCalculationTest;
 
 public class TestLauncher {
-		
+	
+	//TODO:
+	//capacitor with pins, connected to the same net
 	public static void main(String[] args) {
 		boolean testPassed=true;
 		System.out.println("Start tests");

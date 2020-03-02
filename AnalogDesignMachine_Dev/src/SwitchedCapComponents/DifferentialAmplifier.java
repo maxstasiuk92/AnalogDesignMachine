@@ -97,21 +97,33 @@ public class DifferentialAmplifier implements SwitchedCapComponent {
 	
 	/*calculation of coefficients*/
 	private void setCoefficientsForAmpPos() {
-		ampPos.setNodeCoefficient(groundNodeName, -1.0);
+		/*ampPos.setNodeCoefficient(groundNodeName, -1.0);
 		ampPos.setNodeCoefficient(positiveInputNodeName, -openLoopGainDM/2.0);
 		ampPos.setNodeCoefficient(negativeInputNodeName, openLoopGainDM/2.0);
 		ampPos.setNodeCoefficient(positiveOutputNodeName, openLoopGainCM/2.0*+1.0);
 		ampPos.setNodeCoefficient(negativeOutputNodeName, openLoopGainCM/2.0);
-		ampPos.setNodeCoefficient(outCMrefNodeName, -openLoopGainCM);		
+		ampPos.setNodeCoefficient(outCMrefNodeName, -openLoopGainCM);*/
+		ampPos.setNodeCoefficient(groundNodeName, 1.0);
+		ampPos.setNodeCoefficient(positiveInputNodeName, -openLoopGainDM/2.0);
+		ampPos.setNodeCoefficient(negativeInputNodeName, openLoopGainDM/2.0);
+		ampPos.setNodeCoefficient(positiveOutputNodeName, 1.0);
+		//ampPos.setNodeCoefficient(negativeOutputNodeName, openLoopGainCM/2.0);
+		ampPos.setNodeCoefficient(outCMrefNodeName, -1.0);
 	}
 	
 	private void setCoefficientsForAmpNeg() {
-		ampNeg.setNodeCoefficient(groundNodeName, -1.0);
+		/*ampNeg.setNodeCoefficient(groundNodeName, -1.0);
 		ampNeg.setNodeCoefficient(positiveInputNodeName, openLoopGainDM/2.0);
 		ampNeg.setNodeCoefficient(negativeInputNodeName, -openLoopGainDM/2.0);
 		ampNeg.setNodeCoefficient(positiveOutputNodeName, openLoopGainCM/2.0);
 		ampNeg.setNodeCoefficient(negativeOutputNodeName, openLoopGainCM/2.0+1);
-		ampNeg.setNodeCoefficient(outCMrefNodeName, -openLoopGainCM);
+		ampNeg.setNodeCoefficient(outCMrefNodeName, -openLoopGainCM);*/
+		ampNeg.setNodeCoefficient(groundNodeName, 1.0);
+		ampNeg.setNodeCoefficient(positiveInputNodeName, openLoopGainDM/2.0);
+		ampNeg.setNodeCoefficient(negativeInputNodeName, -openLoopGainDM/2.0);
+		//ampNeg.setNodeCoefficient(positiveOutputNodeName, openLoopGainCM/2.0);
+		ampNeg.setNodeCoefficient(negativeOutputNodeName, 1.0);
+		ampNeg.setNodeCoefficient(outCMrefNodeName, -1.0);
 		
 	}
 	
