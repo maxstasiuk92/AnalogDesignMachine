@@ -1,9 +1,10 @@
 package SwitchedCapExamples;
 import java.util.Arrays;
 
+import org.apache.commons.math3.util.Precision;
+
 import SwitchedCapCalculation.*;
 import SwitchedCapComponents.*;
-import SwitchedCapCalculationTest.*;
 
 public class SigmaDeltaModulator {
 	public SwitchedCapCircuit circuit;
@@ -18,73 +19,77 @@ public class SigmaDeltaModulator {
 	private NodePotentialProbe outp, outn;
 	private DifferentialVoltageSource reference, signal;
 	private boolean inReset;
-	private NodePotentialProbe tst1_p, tst1_n;
-	private NodePotentialProbe tst2_p, tst2_n;
 	
 	public static void main(String [] args) {
-		SigmaDeltaModulator sdm=new SigmaDeltaModulator();
-		TestUtil.printCoefficientsOfState(sdm.circuit, "sumPh");
-		//get bitstream, length=10;
-		byte [] bitstream=new byte [31];
-		double [] pos=new double [bitstream.length];
-		double [] neg=new double [bitstream.length];
-		for(int i=0; i<bitstream.length; i++) {
-			bitstream[i]=sdm.getBit();
-			pos[i]=sdm.outp.getNodePotential();
-			neg[i]=sdm.outn.getNodePotential();
+		//signal - reference pairs
+		final double[][] inputs = {{0, 1}, {0.5, 1}, {0.75, 1}, {0, 2}, {0.5, 2}, {0.75, 2}};
+		//length of bit-stream
+		final int streamSize = 32;
+		
+		SigmaDeltaModulator sdm=new SigmaDeltaModulator(0, 0);
+		for (double[] input : inputs) {
+			sdm.updateSignal(input[0]);
+			sdm.updateReference(input[1]);
+			byte [] bitstream = sdm.getBittream(streamSize);
+			sdm.reset();
+			
+			double result = 0;
+			for(int i = 0; i < streamSize; i++) {
+				result += bitstream[i] == 0 ? -1 : 1;
+			}
+			//display bitsream
+			System.out.printf("Converted: %.2f; expected: %.2f", 
+					Precision.round(result/streamSize, 2),
+					Precision.round(input[0]/input[1], 2));
+			System.out.println();
+			System.out.println("Bitstream: "+Arrays.toString(bitstream));
 		}
-		//display bitsream
-		/*System.out.println("Bitstream: "+Arrays.toString(Arrays.copyOfRange(bitstream, bitstream.length-11, bitstream.length-1)));
-		System.out.println("Pos: "+Arrays.toString(Arrays.copyOfRange(pos, bitstream.length-11, bitstream.length-1)));
-		System.out.println("Neg: "+Arrays.toString(Arrays.copyOfRange(neg, bitstream.length-11, bitstream.length-1)));*/
-		System.out.println("Bitstream: "+Arrays.toString(Arrays.copyOfRange(bitstream, 0, 30)));
-		System.out.println("Pos: "+Arrays.toString(Arrays.copyOfRange(pos, 0, 30)));
-		System.out.println("Neg: "+Arrays.toString(Arrays.copyOfRange(neg, 0, 30)));
+		
 	}
 	
-	public SigmaDeltaModulator() {
-		buildCircuit();
+	public SigmaDeltaModulator(double Vsig, double Vref) {
+		buildCircuit(Vsig, Vref);
 		createPhases();
 		inReset=true;
+	}
+	
+	public void reset() {
+		inReset = true;
 	}
 	
 	public void updateSignal(double value) {
 		signal.updateVoltagesInAllStates(value, signal.getCommonModeVoltage());
 	}
 	
+	public void updateReference(double value) {
+		reference.updateVoltagesInAllStates(value, reference.getCommonModeVoltage());
+	}
+	
+	public byte[] getBittream(int size) {
+		byte [] bitstream=new byte [size];
+		for(int i = 0; i < size; i++) {
+			bitstream[i] = getBit();
+		}
+		return bitstream;
+	}
+	
 	public byte getBit() {
 		if(inReset) {
 			circuit.calculateState(resetPhase);
 			inReset=false;
-			System.out.println("reset");
-			System.out.println("    tst1_p: "+tst1_p.getNodePotential());
-			System.out.println("    tst1_n: "+tst1_n.getNodePotential());
-			System.out.println("    diff: "+(tst1_p.getNodePotential()-tst1_n.getNodePotential()));
-			System.out.println("    comm: "+(0.5*tst1_p.getNodePotential()+0.5*tst1_n.getNodePotential()));
 		}
 		byte result=(outp.getNodePotential()-outn.getNodePotential()>0)?(byte)1:(byte)0;
 		circuit.calculateState(samplePhase);
-		System.out.println("sample");
-		System.out.println("    tst1_p: "+tst1_p.getNodePotential());
-		System.out.println("    tst1_n: "+tst1_n.getNodePotential());
-		System.out.println("    diff: "+(tst1_p.getNodePotential()-tst1_n.getNodePotential()));
-		System.out.println("    comm: "+(0.5*tst1_p.getNodePotential()+0.5*tst1_n.getNodePotential()));
 		//behaviour of comparator
 		if(result>0) {
 			circuit.calculateState(subPhase);
-			System.out.println("minus");
 		} else {
 			circuit.calculateState(sumPhase);
-			System.out.println("plus");
 		}
-		System.out.println("    tst1_p: "+tst1_p.getNodePotential());
-		System.out.println("    tst1_n: "+tst1_n.getNodePotential());
-		System.out.println("    diff: "+(tst1_p.getNodePotential()-tst1_n.getNodePotential()));
-		System.out.println("    comm: "+(0.5*tst1_p.getNodePotential()+0.5*tst1_n.getNodePotential()));
 		return result;
 	}
 	
-	private void buildCircuit() {
+	private void buildCircuit(double Vsig, double Vref) {
 		Capacitor cap;
 		ControlledVoltageSource src;
 		DifferentialAmplifier amp;
@@ -158,8 +163,8 @@ public class SigmaDeltaModulator {
 		src.setVoltage(2);
 		circuit.addComponent(src);
 		amp=new DifferentialAmplifier("A1", "#outp", "#outn", "#gnd", "#intn", "#intp", "#outcm");
-		amp.setOpenLoopGainDM(100000); //80dB
-		amp.setOpenLoopGainCM(10000); //60dB
+		amp.setOpenLoopGainDM(10000); //80dB
+		amp.setOpenLoopGainCM(1000); //60dB
 		circuit.addComponent(amp);
 		
 		cap=new Capacitor("Cp2", "#intp", "#outp");
@@ -177,23 +182,16 @@ public class SigmaDeltaModulator {
 		//set potential of "#gnd" to 0, add reference and signal sources
 		reference=new DifferentialVoltageSource("Vr", "#refp", "#refn", "#refcm", "#gnd");
 		signal=new DifferentialVoltageSource("Vs", "#sigp", "#sign", "#sigcm", "#gnd");
-		reference.setVoltages(1.0, 2.0);
-		signal.setVoltages(0.5, 2.0);
+		reference.setVoltages(Vref, 2.0);
+		signal.setVoltages(Vsig, 2.0);
 		circuit.addComponent(reference);
 		circuit.addComponent(signal);
 		circuit.addComponent(new ConstNodePotential("#gnd", 0.0));
 		//lock circuit
 		circuit.lockCircuit();
-		TestUtil.printNodesInCircuit(circuit);
 		//get outputs
 		outp=circuit.getNodePotentialProbe("#outp");
 		outn=circuit.getNodePotentialProbe("#outn");
-		
-		tst1_p=circuit.getNodePotentialProbe("#outp");
-		tst1_n=circuit.getNodePotentialProbe("#outn");
-		/*outp=circuit.getNodePotentialProbe("#intp");
-		outn=circuit.getNodePotentialProbe("#intn");*/
-		
 	}
 	
 	private void createPhases() {

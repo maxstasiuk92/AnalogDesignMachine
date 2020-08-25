@@ -14,7 +14,6 @@ public class SwitchedCapCircuitStateCreator {
 	//auxiliary matrices. Are created once
 	private boolean auxiliaryMatricesExist;
 	//auxiliary matrices for voltage dependencies
-	private boolean [] redundantVoltDepFlag;
 	private byte [][] voltDepAndConstPotMat;
 	private boolean [][] voltDepAndConstPotLinComb;
 	//auxiliary matrices for charge dependencies
@@ -39,7 +38,6 @@ public class SwitchedCapCircuitStateCreator {
 	
 	/*create matrices for voltage dependency equation*/
 	private void createMatForVoltDep() {
-		redundantVoltDepFlag=new boolean [voltageDependencyList.size()];
 		voltDepAndConstPotMat=new byte [constNodePotentialList.size()+voltageDependencyList.size()][nodeNameList.size()];
 		voltDepAndConstPotLinComb=new boolean [constNodePotentialList.size()+voltageDependencyList.size()][constNodePotentialList.size()+voltageDependencyList.size()];
 	}/*createMatForVoltDep*/
@@ -47,11 +45,11 @@ public class SwitchedCapCircuitStateCreator {
 	/*init matrices for voltage dependency equations*/
 	private void initMatForVoltDep() {
 		int rows;
-		Arrays.fill(redundantVoltDepFlag, false);
 		
 		rows=voltDepAndConstPotMat.length;
-		for(int i=0; i<rows; i++)
+		for(int i=0; i<rows; i++) {
 			Arrays.fill(voltDepAndConstPotMat[i], (byte)0);
+		}
 		int voltDepOffs=constNodePotentialList.size();
 		for(int i=0; i<constNodePotentialList.size(); i++) {
 			ConstNodePotential cv=constNodePotentialList.get(i);
@@ -142,16 +140,6 @@ public class SwitchedCapCircuitStateCreator {
 		return shortInstList;
 	}/*getInstancesThatCreateShorts*/
 	
-	/* 
-	 * mark sources/switches, which may be presented by lin. comb. of other sources
-	 * sources/switches, which create shorts are already reported
-	 */
-	private void markRedundantVoltageDependecies() {
-		for(int i=0, j=constNodePotentialList.size(); i<voltageDependencyList.size(); i++, j++) {
-			redundantVoltDepFlag[i]=!voltDepAndConstPotLinComb[j][j];
-		}
-	}
-	
 	/*
 	 * methods to remove floating nodes
 	 * node is floating if it's potential may not be defined from 
@@ -181,7 +169,7 @@ public class SwitchedCapCircuitStateCreator {
 		int nextPtr=1, currentPtr=0;
 		floatingNodeFlag[newConstPotentialNodeIndex] = false;
 		sequence[0]=newConstPotentialNodeIndex;
-
+		int voltDepOffs=constNodePotentialList.size();
 		while(currentPtr<nextPtr) {
 			newConstPotentialNodeIndex=sequence[currentPtr];
 
@@ -207,19 +195,17 @@ public class SwitchedCapCircuitStateCreator {
 			// propagate via VoltageDependency
 			for (int i = 0; i < voltageDependencyList.size(); i++) {
 				VoltageDependency src = voltageDependencyList.get(i);
-				if (!redundantVoltDepFlag[i] && src.getConductiveState()) {
+				if (voltDepAndConstPotLinComb[i+voltDepOffs][i+voltDepOffs])  {
 					int posNodeInd = src.getPositiveConductiveNodeIndex();
 					int negNodeInd = src.getNegativeConductiveNodeIndex();
 					if (posNodeInd == newConstPotentialNodeIndex && floatingNodeFlag[negNodeInd]==true) {
 						floatingNodeFlag[negNodeInd]=false;
 						sequence[nextPtr]=negNodeInd;
 						nextPtr++;
-					} else {
-						if (negNodeInd == newConstPotentialNodeIndex && floatingNodeFlag[posNodeInd]==true) {
-							floatingNodeFlag[posNodeInd]=false;
-							sequence[nextPtr]=posNodeInd;
-							nextPtr++;
-						}
+					} else if (negNodeInd == newConstPotentialNodeIndex && floatingNodeFlag[posNodeInd]==true) {
+						floatingNodeFlag[posNodeInd]=false;
+						sequence[nextPtr]=posNodeInd;
+						nextPtr++;
 					}
 				}
 			}
@@ -241,19 +227,30 @@ public class SwitchedCapCircuitStateCreator {
 	
 	/*init matrices for charge transfer equations*/
 	private void initMatForChargeDep() {
+		int voltDepOffs=constNodePotentialList.size();
 		for(int i=0; i<nodeNameList.size(); i++) {
 			Arrays.fill(capConnMat[i], (byte)0);
-			//TODO:
-			validCapConnMatRow[i]=true; //false;
+			validCapConnMatRow[i]=false; 
 		}
 		for(int i=0; i<capacitorList.size(); i++) {
 			Capacitor cap=capacitorList.get(i);
 			if(cap.getCapacitance()!=0.0) {
 				capConnMat[cap.getPositiveNodeIndex()][i]+=1;
-				//TODO:
-				//validCapConnMatRow[cap.getPositiveNodeIndex()]=true;
+				validCapConnMatRow[cap.getPositiveNodeIndex()]=true;
 				capConnMat[cap.getNegativeNodeIndex()][i]+=-1;
-				//validCapConnMatRow[cap.getNegativeNodeIndex()]=true;
+				validCapConnMatRow[cap.getNegativeNodeIndex()]=true;
+			}
+		}
+		for(int i=0; i<nodeNameList.size(); i++) {
+			Arrays.fill(condInstConnMat[i], (byte)0);
+		}
+		for(int i=0; i<voltageDependencyList.size(); i++) {
+			VoltageDependency src=voltageDependencyList.get(i);
+			if(voltDepAndConstPotLinComb[i+voltDepOffs][i+voltDepOffs]) {
+				condInstConnMat[src.getPositiveConductiveNodeIndex()][i]=1;
+				validCapConnMatRow[src.getPositiveConductiveNodeIndex()]=true;
+				condInstConnMat[src.getNegativeConductiveNodeIndex()][i]=-1;
+				validCapConnMatRow[src.getNegativeConductiveNodeIndex()]=true;
 			}
 		}
 		for(int i=0; i<constNodePotentialList.size(); i++) {
@@ -262,22 +259,8 @@ public class SwitchedCapCircuitStateCreator {
 		for(int i=0; i<extraConstNodePotentialList.size(); i++) {
 			validCapConnMatRow[extraConstNodePotentialList.get(i).getNodeIndex()]=false;
 		}
-		
-		for(int i=0; i<nodeNameList.size(); i++)
-			Arrays.fill(condInstConnMat[i], (byte)0);
-		for(int i=0; i<voltageDependencyList.size(); i++) {
-			VoltageDependency src=voltageDependencyList.get(i);
-			if(!redundantVoltDepFlag[i] && src.getConductiveState()) {
-				condInstConnMat[src.getPositiveConductiveNodeIndex()][i]=1;
-				condInstConnMat[src.getNegativeConductiveNodeIndex()][i]=-1;
-			}
-		}
 	}/*initMatForChargeDep*/
 	
-	//TODO: from here
-	/*
-	 * 
-	 */
 	private void reflectCondInstInCapConnMat() {
 		//create copy of condInstConnMat
 		int rows=nodeNameList.size();
@@ -308,24 +291,10 @@ public class SwitchedCapCircuitStateCreator {
 				}
 			}
 		}
-		//rows with all zeroes - not valid row
-		for(int i=0; i<rows; i++) {
-			if(validCapConnMatRow[i]) {
-				boolean allZero=true;
-				for(int j=0; j<capacitorList.size() && allZero; j++) {
-					if(capConnMat[i][j]!=0) {
-						allZero=false;
-					}
-				}
-				if(allZero) {
-					validCapConnMatRow[i]=false;
-				}
-			}
-		}
 	}/*ReflectCondInstInCapConnMat*/
 	
 	/*
-	 * methods to create state
+	 * methods to fill coefficients inside state
 	 */
 	
 	private void fillCapConMatInState(SwitchedCapCircuitState state) {
@@ -354,15 +323,12 @@ public class SwitchedCapCircuitStateCreator {
 						Capacitor cap=capacitorList.get(capInd);
 						double capVal=cap.getCapacitance();
 						state.addToCoefficient(-capVal, i, posNodeInd);
-						//search other node of capacitor
+						//search other node of capacitor 
 						int negNodeInd=0;
-						while(negNodeInd<nodeNum && 
-								!(negNodeInd!=posNodeInd && capConnMat[negNodeInd][capInd]!=0)) {
+						while(!(negNodeInd!=posNodeInd && capConnMat[negNodeInd][capInd]!=0)) {
 							negNodeInd++;
 						}
-						if(negNodeInd<nodeNum) {
-							state.addToCoefficient(-capVal, i, negNodeInd);
-						} //else - node connected to some voltage dependent node
+						state.addToCoefficient(-capVal, i, negNodeInd);
 					}
 				}
 				state.setCoefficient(-state.getCoefficient(i, i), i, i);
@@ -372,11 +338,12 @@ public class SwitchedCapCircuitStateCreator {
 	
 	private void fillCoeffInStateForVoltDep(SwitchedCapCircuitState state) {
 		int volDepNum=voltageDependencyList.size();
+		int voltDepOffs=constNodePotentialList.size();
 		int nodeNum=nodeNameList.size();
 		int rowSt=0;
 		
 		for(int i=0; i<volDepNum; i++) {
-			if(!redundantVoltDepFlag[i]) {
+			if(voltDepAndConstPotLinComb[i+voltDepOffs][i+voltDepOffs]) {
 				//search free row in state coeff. mat.
 				while(rowSt<nodeNum && !state.isInvalidEquation(rowSt)) rowSt++;
 				if(rowSt<nodeNum) {
@@ -387,6 +354,7 @@ public class SwitchedCapCircuitStateCreator {
 					state.setFreeCoefficient(src.getFreeCoefficient(), rowSt);
 				}
 				else {
+					//in case of mistake in the algorithm
 					throw new RuntimeException("row for voltage dependency equation NOT found");
 				}
 			}
@@ -452,7 +420,6 @@ public class SwitchedCapCircuitStateCreator {
 		if(instCreateShortList.size()>0) {
 			throw new RuntimeException("instances "+instCreateShortList.toString()+" create short circuits");
 		}
-		markRedundantVoltageDependecies();
 		//remove floating nodes
 		setPotentialsToFloatingNodes();
 		//init matrices for charge dependencies

@@ -16,8 +16,8 @@ public class TestStateCreation {
 		TestModels testModels=new TestModels();
 		SwitchedCapCircuit circuit;
 		ArrayList<String> scInstList=null, redundInstList=new ArrayList<String>();
-		Field fieldRedundantVoltDepFlag, fieldVoltageDependencyList;
-		boolean [] redundantVoltDepFlag;
+		Field fieldVoltDepAndConstPotLinComb, fieldVoltageDependencyList;
+		boolean [][] voltDepAndConstPotLinComb;
 		ArrayList<Object> voltageDependencyList;
 				
 		TestModels.ShortCircuits model=testModels.getShortCircuits(SwitchedCapCircuitCreator.createSwitchedCapCircuit());
@@ -47,16 +47,17 @@ public class TestStateCreation {
 			method.setAccessible(true);
 			method.invoke(fieldStateCreator.get(circuit));
 			//get redundantVoltDepFlag
-			fieldRedundantVoltDepFlag=fieldStateCreator.get(circuit).getClass().getDeclaredField("redundantVoltDepFlag");
-			fieldRedundantVoltDepFlag.setAccessible(true);
-			redundantVoltDepFlag=(boolean [])fieldRedundantVoltDepFlag.get(fieldStateCreator.get(circuit));
+			fieldVoltDepAndConstPotLinComb=fieldStateCreator.get(circuit).getClass().getDeclaredField("voltDepAndConstPotLinComb");
+			fieldVoltDepAndConstPotLinComb.setAccessible(true);
+			voltDepAndConstPotLinComb=(boolean [][])fieldVoltDepAndConstPotLinComb.get(fieldStateCreator.get(circuit));
 			//get voltageDependencyList
 			fieldVoltageDependencyList=circuit.getClass().getDeclaredField("voltageDependencyList");
 			fieldVoltageDependencyList.setAccessible(true);
 			voltageDependencyList=(ArrayList<Object>)fieldVoltageDependencyList.get(circuit);
 			//get names of redundant inst
-			for(int i=0; i<redundantVoltDepFlag.length; i++) {
-				if(redundantVoltDepFlag[i]) {
+			int voltDepOffs=voltDepAndConstPotLinComb.length-voltageDependencyList.size();
+			for(int i=0; i<voltageDependencyList.size(); i++) {
+				if(!voltDepAndConstPotLinComb[i+voltDepOffs][i+voltDepOffs]) {
 					redundInstList.add((String)voltageDependencyList.get(i).getClass().getDeclaredMethod("getName")
 					.invoke(voltageDependencyList.get(i)));
 				}
@@ -101,7 +102,9 @@ public class TestStateCreation {
 			method=fieldStateCreator.get(circuit).getClass().getDeclaredMethod("initMatForVoltDep");
 			method.setAccessible(true);
 			method.invoke(fieldStateCreator.get(circuit));
-			
+			method=fieldStateCreator.get(circuit).getClass().getDeclaredMethod("fillVoltDepAndConstPotLinComb");
+			method.setAccessible(true);
+			method.invoke(fieldStateCreator.get(circuit));
 			method=fieldStateCreator.get(circuit).getClass().getDeclaredMethod("setPotentialsToFloatingNodes");
 			method.setAccessible(true);
 			method.invoke(fieldStateCreator.get(circuit));
